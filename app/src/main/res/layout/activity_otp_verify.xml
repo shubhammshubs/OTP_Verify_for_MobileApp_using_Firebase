@@ -161,7 +161,7 @@
                 android:textSize="14sp"/>
             <!--Resend OTP Again-->
             <TextView
-                android:id="@+id/textresendotp"
+                android:id="@+id/textResendOtp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
@@ -177,13 +177,14 @@
             android:id="@+id/buttonVerify"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Verify OTp"
+            android:text="Verify OTP"
             android:layout_margin="30dp"
             android:textStyle="bold"/>
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             />
 
     </LinearLayout>

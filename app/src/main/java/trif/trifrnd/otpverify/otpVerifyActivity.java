@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -12,10 +13,13 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseException;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
+
+import java.util.concurrent.TimeUnit;
 
 import trif.trifrnd.otpverify.databinding.ActivityOtpVerifyBinding;
 
@@ -23,6 +27,7 @@ public class otpVerifyActivity extends AppCompatActivity {
 
     private ActivityOtpVerifyBinding binding;
     private String verificationId;
+    private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,15 +40,29 @@ public class otpVerifyActivity extends AppCompatActivity {
 
 
         binding.textMobileShowNumber.setText(String.format(
-                "+91-%s",getIntent().getStringExtra("Phone")
+                getIntent().getStringExtra("Phone")
         ));
 
         verificationId = getIntent().getStringExtra("verificationId");
 
-        binding.textresendotp.setOnClickListener(new View.OnClickListener() {
+
+//      Resend OTP Activity
+        binding.textResendOtp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(otpVerifyActivity.this, "OTP Sent Successfully.", Toast.LENGTH_SHORT).show();
+                resendVerificationCode(getIntent().getStringExtra("Phone"));
+
+            }
+
+            private void resendVerificationCode(String phoneNumber) {
+                PhoneAuthProvider.getInstance().verifyPhoneNumber(
+                        phoneNumber,
+                        60, // Timeout duration
+                        TimeUnit.SECONDS,
+                        otpVerifyActivity.this, // Activity (context)
+                        mCallbacks, // OnVerificationStateChangedCallbacks
+                        null // Force Resending Token (null for first time)
+                );
             }
         });
 
@@ -51,7 +70,13 @@ public class otpVerifyActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 binding.progressBar.setVisibility(View.VISIBLE);
-                binding.buttonVerify.setVisibility(View.INVISIBLE);
+                // Initialize the Handler
+                Handler handler = new Handler();
+
+                // Delay in milliseconds (5 seconds)
+                long delayMillis = 5000;
+
+//                binding.buttonVerify.setVisibility(View.INVISIBLE);
 
                 if (binding.inputotp1.getText().toString().trim().isEmpty() ||
                         binding.inputotp2.getText().toString().trim().isEmpty() ||
@@ -59,7 +84,19 @@ public class otpVerifyActivity extends AppCompatActivity {
                         binding.inputotp4.getText().toString().trim().isEmpty() ||
                         binding.inputotp5.getText().toString().trim().isEmpty() ||
                         binding.inputotp6.getText().toString().trim().isEmpty()) {
-                    Toast.makeText(otpVerifyActivity.this, "OTP is not Valid!", Toast.LENGTH_SHORT).show();
+//                    binding.progressBar.setVisibility(View.GONE);
+
+                    // Post a delayed runnable to hide the progress bar
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            // Hide the progress bar after 5 seconds
+                            binding.progressBar.setVisibility(View.GONE);
+                            Toast.makeText(otpVerifyActivity.this, "OTP is not Valid! Please enter complete otp", Toast.LENGTH_SHORT).show();
+
+                        }
+                    }, delayMillis);
+
                 }
                 else {
                     if (verificationId != null) {
@@ -79,16 +116,27 @@ public class otpVerifyActivity extends AppCompatActivity {
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 if (task.isSuccessful()) {
                                     binding.progressBar.setVisibility(View.VISIBLE);
-                                    binding.buttonVerify.setVisibility(View.INVISIBLE);
-                                    Toast.makeText(otpVerifyActivity.this, "Welcome...", Toast.LENGTH_SHORT).show();
+//                                    binding.buttonVerify.setVisibility(View.INVISIBLE);
+                                    Toast.makeText(otpVerifyActivity.this, "Welcome." + getIntent().getStringExtra("Phone"), Toast.LENGTH_SHORT).show();
                                     Intent intent =new Intent(otpVerifyActivity.this,MainActivity.class);
                                     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    intent.putExtra("Phone",binding.textMobileShowNumber.getText().toString().trim());
                                     startActivity(intent);
                                 }
                                 else {
                                     binding.progressBar.setVisibility(View.GONE);
-                                    binding.buttonVerify.setVisibility(View.VISIBLE);
-                                    Toast.makeText(otpVerifyActivity.this, "OTP is Invalid ", Toast.LENGTH_SHORT).show();
+//                                    binding.buttonVerify.setVisibility(View.VISIBLE);
+                                    // Post a delayed runnable to hide the progress bar
+                                    handler.postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            // Hide the progress bar after 5 seconds
+                                            binding.progressBar.setVisibility(View.GONE);
+                                            Toast.makeText(otpVerifyActivity.this, "OTP is InValid!", Toast.LENGTH_SHORT).show();
+
+                                        }
+                                    }, delayMillis);
+//                                    Toast.makeText(otpVerifyActivity.this, "OTP is Invalid ", Toast.LENGTH_SHORT).show();
 
                                 }
 
@@ -98,6 +146,7 @@ public class otpVerifyActivity extends AppCompatActivity {
                 }
             }
         });
+
     }
 
     private void editTextInput() {

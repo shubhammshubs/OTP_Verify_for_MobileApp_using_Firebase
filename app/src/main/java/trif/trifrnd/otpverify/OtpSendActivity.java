@@ -64,7 +64,7 @@ public class OtpSendActivity extends AppCompatActivity {
 
     private void otpSend() {
 
-//        binding.progressBar.setVisibility(View.VISIBLE);
+        binding.progressBar.setVisibility(View.VISIBLE);
 //        binding.buttonSendOTP.setVisibility(View.INVISIBLE);
 
         mCallbacks = new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
@@ -78,7 +78,7 @@ public class OtpSendActivity extends AppCompatActivity {
 
             @Override
             public void onVerificationFailed(@NonNull FirebaseException e) {
-//                binding.progressBar.setVisibility(View.GONE);
+                binding.progressBar.setVisibility(View.GONE);
 //                binding.buttonSendOTP.setVisibility(View.VISIBLE);
                 Toast.makeText(OtpSendActivity.this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
 
@@ -88,10 +88,12 @@ public class OtpSendActivity extends AppCompatActivity {
             @Override
             public void onCodeSent(@NonNull String verificationId,
                                    @NonNull PhoneAuthProvider.ForceResendingToken token) {
-//                binding.progressBar.setVisibility(View.GONE);
+                binding.progressBar.setVisibility(View.GONE);
 //                binding.buttonSendOTP.setVisibility(View.VISIBLE);
                 Toast.makeText(OtpSendActivity.this, "OTP is successfully sent.", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(OtpSendActivity.this,otpVerifyActivity.class);
+
+//                PUt Extra will take mobile number to next page
                 intent.putExtra("Phone",binding.editTextMobileNumber.getText().toString().trim());
                 intent.putExtra("verificationId",verificationId);
                 startActivity(intent);
